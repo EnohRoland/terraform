@@ -32,7 +32,7 @@ jobs:
         run: terraform validate
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@v3
         with:
          role-to-assume: arn:aws:iam::651706754162:role/terraform-role
          role-session-name: githubactions
