@@ -1,13 +1,18 @@
-name: Terraform Apply
+name: Terraform Apply (OIDC)
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch: 
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
-  id-token: write   
+  id-token: write
   contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
 
 jobs:
   terraform:
@@ -17,29 +22,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
-      - name: Terraform fmt (check)
-        run: terraform fmt -check -recursive
-
-      - name: Terraform init
-        run: terraform init -input=false
-
-      - name: Terraform validate
-        run: terraform validate
-
+      # ✅ OIDC auth MUST happen before any Terraform that talks to AWS (init/plan/apply)
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-         role-to-assume: arn:aws:iam::651706754162:role/terraform-role
-         role-session-name: githubactions
-         aws-region: "us-east-1"
+          role-to-assume: arn:aws:iam::651706754162:role/terraform-role
+          role-session-name: githubactions-terraform
+          aws-region: ${{ env.AWS_REGION }}
 
-
-      - name: verify AWS credentials
+      - name: Verify AWS identity
         run: aws sts get-caller-identity
-      
-       
