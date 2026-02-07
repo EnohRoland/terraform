@@ -1,0 +1,67 @@
+name: Terraform Destroy (Goshenignite)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_VERSION: "1.6.6"
+
+jobs:
+  destroy_infra:
+    name: Destroy Infra
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: AWS Auth (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform init (infra)
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: Terraform destroy (infra)
+        working-directory: infra
+        run: terraform destroy -input=false -auto-approve
+
+  destroy_bootstrap:
+    name: Destroy Bootstrap Backend
+    runs-on: ubuntu-latest
+    needs: destroy_infra
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: AWS Auth (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform init (bootstrap-backend)
+        working-directory: bootstrap-backend
+        run: terraform init -input=false
+
+      - name: Terraform destroy (bootstrap-backend)
+        working-directory: bootstrap-backend
+        run: terraform destroy -input=false -auto-approve
