@@ -1,9 +1,10 @@
 terraform {
   backend "s3" {
-    bucket         = "REPLACE_ME_BUCKET"
+    bucket         = "goshenignite-tfstate-e8bb83f9"
+
     key            = "infra/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "REPLACE_ME_TABLE"
+    dynamodb_table = "goshenignite-tflock"
     encrypt        = true
   }
 }
